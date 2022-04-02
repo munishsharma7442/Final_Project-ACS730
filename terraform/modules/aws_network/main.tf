@@ -91,7 +91,7 @@ resource "aws_nat_gateway" "nat-gw" {
   subnet_id     = aws_subnet.public_subnet[0].id
 
   tags = {
-    Name = "${local.name_prefix}-Grou9-Nat-GW"
+    Name = "${local.name_prefix}-Group9-Nat-GW"
   }
   # To ensure proper ordering, it is recommended to add an explicit dependency
   # on the Internet Gateway for the VPC.
