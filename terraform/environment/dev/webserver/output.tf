@@ -1,16 +1,13 @@
-# Print public_ip
+# Add output variables
 output "public_ip" {
   value = aws_instance.bastion.public_ip
 }
 
-# Print bastion_private_ip
-output "bastion_private_ip" {
-  value = aws_instance.bastion.private_ip
-}
-
-# Print dev_private_ips
-output "dev_private_ips" {
-  value = aws_instance.my_amazon.*.private_ip
+output "private_ip_webserver_1" {
+  value = aws_instance.webserver1.private_ip
 }
 
 
+output "private_ip_webserver_2" {
+  value = aws_instance.webserver2.private_ip
+}
