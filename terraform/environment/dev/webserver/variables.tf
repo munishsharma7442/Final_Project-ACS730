@@ -28,3 +28,4 @@ variable "my_private_ip" {
   type        = string
   description = "Private IP of my Cloud9"
   default     = "172.31.84.89"
+}
