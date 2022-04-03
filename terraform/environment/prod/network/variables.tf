@@ -17,21 +17,21 @@ variable "prefix" {
 
 # VPC CIDR range
 variable "vpc_cidr" {
-  default     = "10.300.0.0/16"
+  default     = "10.30.0.0/16"
   type        = string
   description = "VPC to host production machines"
 }
 
-# # Provision public subnets in custom VPC
-# variable "public_subnet_cidrs" {
-#   default     = ["10.100.1.0/24", "10.100.2.0/24"]
-#   type        = list(string)
-#   description = "Public Subnet CIDRs"
-# }
+# Provision public subnets in custom VPC
+variable "public_subnet_cidrs" {
+  default     = ["10.30.0.0/24"]
+  type        = list(string)
+  description = "Public Subnet CIDRs"
+}
 
 # Provision private subnets in custom VPC
 variable "private_subnet_cidrs" {
-  default     = ["10.300.1.0/24", "10.300.2.0/24", "10.300.3.0/24"]
+  default     = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
   type        = list(string)
   description = "Private Subnet CIDRs"
 }
