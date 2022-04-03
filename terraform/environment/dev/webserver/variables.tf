@@ -16,16 +16,21 @@ variable "env" {
   description = "Deployment Environment"
 }
 
+variable "ec2_count" {
+  type = number
+  default = "2"
+}
+
 # Cloud9 Public IP
 variable "my_public_ip" {
   type        = string
   description = "Public IP of my Cloud9"
-  default     = "52.91.88.126"
+  default     = "44.200.80.19"
 }
 
 # Cloud9 Private IP
 variable "my_private_ip" {
   type        = string
   description = "Private IP of my Cloud9"
-  default     = "172.31.84.89"
+  default     = "172.31.75.213"
 }
