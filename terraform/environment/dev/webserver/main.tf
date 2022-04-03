@@ -17,8 +17,8 @@ data "aws_ami" "latest_amazon_linux" {
 data "terraform_remote_state" "network" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-devs-final-project-acs730"   // Bucket from where to GET Terraform State
-    key    = "dev/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
+    bucket = "tf-${var.env}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    key    = "${var.env}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
     region = "us-east-1"                            // Region where bucket created
   }
 }
@@ -51,12 +51,13 @@ module "globalvars" {
 }
 
 # webserver1 EC2 instance
-resource "aws_instance" "webserver1" {
+resource "aws_instance" "webserver" {
+  count                       = var.ec2_count
   ami                         = data.aws_ami.latest_amazon_linux.id
   instance_type               = lookup(var.instance_type, var.env)
   key_name                    = aws_key_pair.web_key.key_name
-  subnet_id                   = data.terraform_remote_state.network.outputs.private_subnet_ids[0]
-  security_groups             = [aws_security_group.webserver1_sg.id]
+  subnet_id                   = data.terraform_remote_state.network.outputs.private_subnet_ids[count.index]
+  security_groups             = [aws_security_group.webserver_sg.id]
   associate_public_ip_address = false
   user_data = templatefile("${path.module}/install_httpd.sh.tpl",
     {
@@ -75,10 +76,33 @@ resource "aws_instance" "webserver1" {
 
   tags = merge(local.default_tags,
     {
-      "Name" = "${local.name_prefix}-webserver1"
+      "Name" = "${local.name_prefix}-webserver-${count.index+1}"
     }
   )
 }
+
+# Create another EBS volume
+resource "aws_ebs_volume" "web_ebs" {
+  count             = var.ec2_count
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  size              = 4
+  # size              = 40
+  tags = merge(local.default_tags,
+    {
+      "Name" = "${local.name_prefix}-EBS"
+    }
+  )
+}
+
+# Attach EBS volume
+resource "aws_volume_attachment" "ebs_att" {
+  count       = var.ec2_count
+  device_name = "/dev/sdh"
+  volume_id   = aws_ebs_volume.web_ebs[count.index].id
+  # volume_id   = aws_ebs_volume.web_ebs[count.index].id
+  instance_id = aws_instance.webserver[count.index].id
+}
+
 
 # Adding SSH key to Amazon EC2
 resource "aws_key_pair" "web_key" {
@@ -88,8 +112,8 @@ resource "aws_key_pair" "web_key" {
 
 
 # Security Group of webserver1
-resource "aws_security_group" "webserver1_sg" {
-  name        = "allow_http_ssh_webserver1"
+resource "aws_security_group" "webserver_sg" {
+  name        = "allow_http_ssh_webserver"
   description = "Allow HTTP and SSH inbound traffic"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
@@ -126,75 +150,6 @@ resource "aws_security_group" "webserver1_sg" {
   )
 }
 
-# webserver2 EC2 instance
-resource "aws_instance" "webserver2" {
-  ami                         = data.aws_ami.latest_amazon_linux.id
-  instance_type               = lookup(var.instance_type, var.env)
-  key_name                    = aws_key_pair.web_key.key_name
-  subnet_id                   = data.terraform_remote_state.network.outputs.private_subnet_ids[1]
-  security_groups             = [aws_security_group.webserver2_sg.id]
-  associate_public_ip_address = false
-  user_data = templatefile("${path.module}/install_httpd.sh.tpl",
-    {
-      env    = upper(var.env),
-      prefix = upper(local.prefix)
-    }
-  )
-
-  root_block_device {
-    encrypted = var.env == "prod" ? true : false
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = merge(local.default_tags,
-    {
-      "Name" = "${local.name_prefix}-webserver2"
-    }
-  )
-}
-
-
-# Security Group of webserver2
-resource "aws_security_group" "webserver2_sg" {
-  name        = "allow_http_ssh_webserver2"
-  description = "Allow HTTP and SSH inbound traffic"
-  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
-
-  ingress {
-    description      = "HTTP from everywhere"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  ingress {
-    description      = "SSH from everywhere"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-
-  tags = merge(local.default_tags,
-    {
-      "Name" = "${local.name_prefix}-webserver2-sg"
-    }
-  )
-}
 
 # Bastion host EC2 instance
 resource "aws_instance" "bastion" {
