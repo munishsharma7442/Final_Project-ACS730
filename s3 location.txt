@@ -1,0 +1,11 @@
+Dev
+bucket = "tf-devs3-final-project-acs730"  
+key    = "dev/network/terraform.tfstate" 
+
+Prod
+bucket = "tf-prods3-final-project-acs730"   
+key    = "prod/network/terraform.tfstate" 
+
+Staging
+bucket = "tf-stagings3-final-project-acs730"    
+key    = "staging/network/terraform.tfstate" 
