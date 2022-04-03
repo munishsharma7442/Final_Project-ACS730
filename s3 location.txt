@@ -1,11 +1,23 @@
-Dev
+Dev network
 bucket = "tf-devs3-final-project-acs730"  
 key    = "dev/network/terraform.tfstate" 
 
-Prod
+Dev webserver
+bucket = "tf-devs3-final-project-acs730"  
+key    = "dev/webserver/terraform.tfstate" 
+
+Prod network
 bucket = "tf-prods3-final-project-acs730"   
 key    = "prod/network/terraform.tfstate" 
 
-Staging
+Prod webserver
+bucket = "tf-prods3-final-project-acs730"
+key    = "prod/webservers/terraform.tfstatee" 
+
+Staging network
 bucket = "tf-stagings3-final-project-acs730"    
 key    = "staging/network/terraform.tfstate" 
+
+Staging webserver
+bucket = "tf-stagings3-final-project-acs730"    
+key    = "staging/webserver/terraform.tfstate" 
