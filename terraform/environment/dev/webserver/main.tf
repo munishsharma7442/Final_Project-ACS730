@@ -202,3 +202,70 @@ resource "aws_security_group" "bastion_sg" {
     }
   )
 }
+
+# module "alb" {
+#   source              = "../../../modules/alb"
+#   env                 = var.env
+#   vpc_cidr              = data.terraform_remote_state.network.outputs.vpc_id
+#   aws_security_group     = aws_security_group.webserver_sg.id
+#   public_subnet_ids  =  data.terraform_remote_state.network.outputs.public_subnet_ids[*]
+#   prefix              = var.prefix
+#   default_tags        = var.default_tags
+# }
+
+# resource "aws_lb_target_group_attachment" "ec2_attach" {
+#   count = length (aws_instance.webserver)
+#   target_group_arn = module.alb.outputs.target_group_id
+#   target_id        = aws_instance.webserver[count.index].id
+#   port             = 80
+# }
+
+
+
+resource "aws_lb" "alb" {
+  name               = "alb-${var.env}"
+  internal           = false
+  ip_address_type    = "ipv4"
+  load_balancer_type = "application"
+ # security_groups    = var.aws_security_group
+  subnets            = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
+
+  #enable_deletion_protection = true
+
+  # access_logs {
+  #   bucket  = aws_s3_bucket.lb_logs.bucket
+  #   prefix  = "test-lb"
+  #   enabled = true
+  # }
+
+  tags = merge(local.default_tags,
+    {
+      "Name" = "${local.name_prefix}-ALB"
+    }
+  )
+}
+
+resource "aws_lb_listener" "alb_listener" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = "80"
+  protocol          = "HTTP"
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.target_group.arn
+  }
+}
+
+resource "aws_lb_target_group" "target_group" {
+  name     = "tg-alb-${var.env}"
+  port     = 80
+  protocol = "HTTP"
+  target_type = "instance"
+  vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
+}
+
+resource "aws_lb_target_group_attachment" "ec2_attach" {
+  count = length (aws_instance.webserver)
+  target_group_arn = aws_lb_target_group.target_group.arn
+  target_id        = aws_instance.webserver[count.index].id
+  port             = 80
+}

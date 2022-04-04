@@ -9,6 +9,21 @@ variable "instance_type" {
   type        = map(string)
 }
 
+# Default tags
+variable "default_tags" {
+  default = {
+    "Owner" = "Group_9"
+    "App"   = "Web"
+  }
+}
+
+# Prefix to identify resources
+variable "prefix" {
+  type    = string
+  default = "ACS_Project"
+}
+
+
 # Variable to signal the current environment 
 variable "env" {
   default     = "dev"
