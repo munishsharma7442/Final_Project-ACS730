@@ -17,7 +17,7 @@ data "aws_ami" "latest_amazon_linux" {
 data "terraform_remote_state" "network" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-${var.env}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    bucket = "tf-${var.env}s3-final-project-acs730" // Bucket from where to GET Terraform State
     key    = "${var.env}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
     region = "us-east-1"                            // Region where bucket created
   }
@@ -76,7 +76,7 @@ resource "aws_instance" "webserver" {
 
   tags = merge(local.default_tags,
     {
-      "Name" = "${local.name_prefix}-webserver-${count.index+1}"
+      "Name" = "${local.name_prefix}-webserver-${count.index + 1}"
     }
   )
 }
@@ -86,7 +86,6 @@ resource "aws_ebs_volume" "web_ebs" {
   count             = var.ec2_count
   availability_zone = data.aws_availability_zones.available.names[count.index]
   size              = 4
-  # size              = 40
   tags = merge(local.default_tags,
     {
       "Name" = "${local.name_prefix}-EBS"
@@ -99,7 +98,6 @@ resource "aws_volume_attachment" "ebs_att" {
   count       = var.ec2_count
   device_name = "/dev/sdh"
   volume_id   = aws_ebs_volume.web_ebs[count.index].id
-  # volume_id   = aws_ebs_volume.web_ebs[count.index].id
   instance_id = aws_instance.webserver[count.index].id
 }
 
@@ -118,21 +116,26 @@ resource "aws_security_group" "webserver_sg" {
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description      = "HTTP from everywhere"
+    description      = "HTTP from Bastian"
     from_port        = 80
     to_port          = 80
     protocol         = "tcp"
     security_groups  = [aws_security_group.bastion_sg.id]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
-    description      = "SSH from everywhere"
+    description      = "SSH from Bastian"
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
     security_groups  = [aws_security_group.bastion_sg.id]
-    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description      = "HTTP from LB"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+   security_groups    = [aws_security_group.lb_sg.id]
   }
 
   egress {
@@ -140,12 +143,11 @@ resource "aws_security_group" "webserver_sg" {
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = merge(local.default_tags,
     {
-      "Name" = "${local.name_prefix}-webserver1-sg"
+      "Name" = "${local.name_prefix}-webserver-sg"
     }
   )
 }
@@ -185,7 +187,6 @@ resource "aws_security_group" "bastion_sg" {
     to_port          = 22
     protocol         = "tcp"
     cidr_blocks      = ["${var.my_public_ip}/32", "${var.my_private_ip}/32"]
-    ipv6_cidr_blocks = ["::/0"]
   }
 
   egress {
@@ -227,8 +228,8 @@ resource "aws_lb" "alb" {
   internal           = false
   ip_address_type    = "ipv4"
   load_balancer_type = "application"
- # security_groups    = var.aws_security_group
-  subnets            = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
+  security_groups    = [aws_security_group.lb_sg.id]
+  subnets            = data.terraform_remote_state.network.outputs.public_subnet_ids[*]
 
   #enable_deletion_protection = true
 
@@ -256,16 +257,61 @@ resource "aws_lb_listener" "alb_listener" {
 }
 
 resource "aws_lb_target_group" "target_group" {
-  name     = "tg-alb-${var.env}"
-  port     = 80
-  protocol = "HTTP"
+  health_check {
+    interval            = 10
+    path                = "/"
+    protocol            = "HTTP"
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+  }
+  name        = "tg-alb-${var.env}"
+  port        = 80
+  protocol    = "HTTP"
   target_type = "instance"
-  vpc_id   = data.terraform_remote_state.network.outputs.vpc_id
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 }
 
 resource "aws_lb_target_group_attachment" "ec2_attach" {
-  count = length (aws_instance.webserver)
+  count            = length(aws_instance.webserver)
   target_group_arn = aws_lb_target_group.target_group.arn
   target_id        = aws_instance.webserver[count.index].id
   port             = 80
+}
+
+resource "aws_security_group" "lb_sg" {
+  name        = "allow_http_lb"
+  description = "Allow HTTP inbound traffic"
+  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
+
+  ingress {
+    description      = "HTTP from everywhere"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+  ingress {
+    description      = "HTTP from everywhere"
+    from_port        = 8080
+    to_port          = 8080
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = merge(local.default_tags,
+    {
+      "Name" = "${local.name_prefix}-lb-sg"
+    }
+  )
 }
