@@ -32,7 +32,7 @@ variable "env" {
 }
 
 variable "ec2_count" {
-  type = number
+  type    = number
   default = "2"
 }
 
@@ -40,12 +40,12 @@ variable "ec2_count" {
 variable "my_public_ip" {
   type        = string
   description = "Public IP of my Cloud9"
-  default     = "44.200.80.19"
+  default     = "35.173.250.114"
 }
 
 # Cloud9 Private IP
 variable "my_private_ip" {
   type        = string
   description = "Private IP of my Cloud9"
-  default     = "172.31.75.213"
+  default     = "172.31.67.197"
 }
