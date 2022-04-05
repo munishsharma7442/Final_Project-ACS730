@@ -109,14 +109,14 @@ resource "aws_key_pair" "web_key" {
 }
 
 
-# Security Group of webserver1
+# Security Group of webserver
 resource "aws_security_group" "webserver_sg" {
   name        = "allow_http_ssh_webserver"
   description = "Allow HTTP and SSH inbound traffic"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description     = "HTTP from Bastian"
+    description     = "HTTP from Bastion"
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
@@ -124,7 +124,7 @@ resource "aws_security_group" "webserver_sg" {
   }
 
   ingress {
-    description     = "SSH from Bastian"
+    description     = "SSH from Bastion"
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
@@ -222,7 +222,6 @@ resource "aws_security_group" "bastion_sg" {
 # }
 
 
-
 resource "aws_lb" "alb" {
   name               = "alb-${var.env}"
   internal           = false
@@ -245,6 +244,7 @@ resource "aws_lb" "alb" {
     }
   )
 }
+
 
 resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
@@ -316,6 +316,7 @@ resource "aws_security_group" "lb_sg" {
   )
 }
 
+# Create AWS Launch Configuration
 resource "aws_launch_configuration" "web" {
   image_id        = data.aws_ami.latest_amazon_linux.id
   instance_type   = lookup(var.instance_type, var.env)
@@ -327,6 +328,7 @@ resource "aws_launch_configuration" "web" {
   }
 }
 
+# Create ASG for Webserver
 resource "aws_autoscaling_group" "web_asg" {
   min_size             = 1
   max_size             = 4
@@ -345,7 +347,8 @@ resource "aws_autoscaling_group" "web_asg" {
   }
 }
 
-resource "aws_autoscaling_policy" "scale_out" {
+# Create auto-scaling policy for scaling in
+resource "aws_autoscaling_policy" "scale_in" {
   name                   = "web_scale_out"
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
   adjustment_type        = "ChangeInCapacity"
@@ -353,14 +356,15 @@ resource "aws_autoscaling_policy" "scale_out" {
   cooldown               = 120
 }
 
-resource "aws_cloudwatch_metric_alarm" "scale_out" {
+# Create cloud wathc alarm to scale in if cpu util load is below 5%
+resource "aws_cloudwatch_metric_alarm" "scale_in" {
   alarm_description   = "Monitors CPU utilization for Web ASG"
-  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
-  alarm_name          = "web_scale_out"
+  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+  alarm_name          = "web_scale_in"
   comparison_operator = "LessThanOrEqualToThreshold"
   namespace           = "AWS/EC2"
   metric_name         = "CPUUtilization"
-  threshold           = "10"
+  threshold           = "5"
   evaluation_periods  = "2"
   period              = "120"
   statistic           = "Average"
@@ -370,22 +374,24 @@ resource "aws_cloudwatch_metric_alarm" "scale_out" {
   }
 }
 
-resource "aws_autoscaling_policy" "scale_in" {
-  name                   = "web_scale_in"
+# Create auto-scaling policy for scaling out
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "web_scale_out"
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
   adjustment_type        = "ChangeInCapacity"
   scaling_adjustment     = 1
   cooldown               = 120
 }
 
-resource "aws_cloudwatch_metric_alarm" "scale_in" {
+# Create cloud watch alarm to scale out if cpu util if the load is above 10%
+resource "aws_cloudwatch_metric_alarm" "scale_out" {
   alarm_description   = "Monitors CPU utilization for Web ASG"
   alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
-  alarm_name          = "web_scale_in"
+  alarm_name          = "web_scale_out"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   namespace           = "AWS/EC2"
   metric_name         = "CPUUtilization"
-  threshold           = "5"
+  threshold           = "10"
   evaluation_periods  = "2"
   period              = "120"
   statistic           = "Average"
