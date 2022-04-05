@@ -50,7 +50,7 @@ module "globalvars" {
   source = "../../../modules/globalvars"
 }
 
-# webserver1 EC2 instance
+# webserver EC2 instance
 resource "aws_instance" "webserver" {
   count                       = var.ec2_count
   ami                         = data.aws_ami.latest_amazon_linux.id
@@ -318,6 +318,7 @@ resource "aws_security_group" "lb_sg" {
 
 # Create AWS Launch Configuration
 resource "aws_launch_configuration" "web" {
+  name            = "web-${var.env}"
   image_id        = data.aws_ami.latest_amazon_linux.id
   instance_type   = lookup(var.instance_type, var.env)
   user_data       = file("install_httpd.sh.tpl")
@@ -330,26 +331,45 @@ resource "aws_launch_configuration" "web" {
 
 # Create ASG for Webserver
 resource "aws_autoscaling_group" "web_asg" {
+  name                 = "web_asg-${var.env}"
   min_size             = 1
   max_size             = 4
   desired_capacity     = 1
   launch_configuration = aws_launch_configuration.web.name
   vpc_zone_identifier  = data.terraform_remote_state.network.outputs.public_subnet_ids
 
-  dynamic "tag" {
-    for_each = local.default_tags
-
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
+  lifecycle {
+    ignore_changes = [desired_capacity, target_group_arns]
   }
+
+#   dynamic "tag" {
+#     for_each = local.default_tags
+
+#     content {
+#       key                 = tag.key
+#       value               = tag.value
+#       propagate_at_launch = true
+#     }
+#   }
+# }
+
+# Tag for correction
+  tag {
+    key                 = "Name"
+    value               = "WebASG"
+    propagate_at_launch = true
+  }
+}
+
+# Create autoscaling attachment
+resource "aws_autoscaling_attachment" "web_asg_attachment" {
+  autoscaling_group_name = aws_autoscaling_group.web_asg.id
+  lb_target_group_arn    = aws_lb_target_group.target_group.arn
 }
 
 # Create auto-scaling policy for scaling in
 resource "aws_autoscaling_policy" "scale_in" {
-  name                   = "web_scale_out"
+  name                   = "web_scale_in"
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
   adjustment_type        = "ChangeInCapacity"
   scaling_adjustment     = -1
@@ -386,7 +406,7 @@ resource "aws_autoscaling_policy" "scale_out" {
 # Create cloud watch alarm to scale out if cpu util if the load is above 10%
 resource "aws_cloudwatch_metric_alarm" "scale_out" {
   alarm_description   = "Monitors CPU utilization for Web ASG"
-  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
   alarm_name          = "web_scale_out"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   namespace           = "AWS/EC2"
