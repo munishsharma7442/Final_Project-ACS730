@@ -116,33 +116,33 @@ resource "aws_security_group" "webserver_sg" {
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description      = "HTTP from Bastian"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
+    description     = "HTTP from Bastian"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
   }
 
   ingress {
-    description      = "SSH from Bastian"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    security_groups  = [aws_security_group.bastion_sg.id]
+    description     = "SSH from Bastian"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion_sg.id]
   }
   ingress {
-    description      = "HTTP from LB"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-   security_groups    = [aws_security_group.lb_sg.id]
+    description     = "HTTP from LB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lb_sg.id]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = merge(local.default_tags,
@@ -182,11 +182,11 @@ resource "aws_security_group" "bastion_sg" {
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description      = "SSH from everywhere"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["${var.my_public_ip}/32", "${var.my_private_ip}/32"]
+    description = "SSH from everywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["${var.my_public_ip}/32", "${var.my_private_ip}/32"]
   }
 
   egress {
@@ -314,4 +314,83 @@ resource "aws_security_group" "lb_sg" {
       "Name" = "${local.name_prefix}-lb-sg"
     }
   )
+}
+
+resource "aws_launch_configuration" "web" {
+  image_id        = data.aws_ami.latest_amazon_linux.id
+  instance_type   = lookup(var.instance_type, var.env)
+  user_data       = file("install_httpd.sh.tpl")
+  security_groups = [aws_security_group.lb_sg.id]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_autoscaling_group" "web_asg" {
+  min_size             = 1
+  max_size             = 4
+  desired_capacity     = 1
+  launch_configuration = aws_launch_configuration.web.name
+  vpc_zone_identifier  = data.terraform_remote_state.network.outputs.public_subnet_ids
+
+  dynamic "tag" {
+    for_each = local.default_tags
+
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+}
+
+resource "aws_autoscaling_policy" "scale_out" {
+  name                   = "web_scale_out"
+  autoscaling_group_name = aws_autoscaling_group.web_asg.name
+  adjustment_type        = "ChangeInCapacity"
+  scaling_adjustment     = -1
+  cooldown               = 120
+}
+
+resource "aws_cloudwatch_metric_alarm" "scale_out" {
+  alarm_description   = "Monitors CPU utilization for Web ASG"
+  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
+  alarm_name          = "web_scale_out"
+  comparison_operator = "LessThanOrEqualToThreshold"
+  namespace           = "AWS/EC2"
+  metric_name         = "CPUUtilization"
+  threshold           = "10"
+  evaluation_periods  = "2"
+  period              = "120"
+  statistic           = "Average"
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
+  }
+}
+
+resource "aws_autoscaling_policy" "scale_in" {
+  name                   = "web_scale_in"
+  autoscaling_group_name = aws_autoscaling_group.web_asg.name
+  adjustment_type        = "ChangeInCapacity"
+  scaling_adjustment     = 1
+  cooldown               = 120
+}
+
+resource "aws_cloudwatch_metric_alarm" "scale_in" {
+  alarm_description   = "Monitors CPU utilization for Web ASG"
+  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
+  alarm_name          = "web_scale_in"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  namespace           = "AWS/EC2"
+  metric_name         = "CPUUtilization"
+  threshold           = "5"
+  evaluation_periods  = "2"
+  period              = "120"
+  statistic           = "Average"
+
+  dimensions = {
+    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
+  }
 }
