@@ -23,7 +23,7 @@ variable "default_tags" {
 
 # Prefix to identify resources
 variable "prefix" {
-  default     = "Final_Project"
+  default     = "ACS_Project"
   type        = string
   description = "Name prefix"
 }
@@ -43,7 +43,7 @@ variable "ec2_count" {
 
 variable "my_bastion_cidrs" {
   type        = string
-  default     = "10.1.0.0/22"
+  default     = "10.100.0.0/16"
   description = "Public IP of my Cloud 9 station to be opened in bastion ingress"
 }
 
