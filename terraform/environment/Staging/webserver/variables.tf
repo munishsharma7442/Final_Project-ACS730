@@ -3,7 +3,6 @@ variable "instance_type" {
   default = {
     "prod"    = "t3.medium"
     # "prod"    = "t2.micro"      // for test uncomment
-    "test"    = "t3.micro"
     "staging" = "t3.small"
     "dev"     = "t2.micro"
   }
@@ -31,7 +30,7 @@ variable "prefix" {
 
 # Variable to signal the current environment 
 variable "env" {
-  default     = "prod"
+  default     = "staging"
   type        = string
   description = "Deployment Environment"
 }

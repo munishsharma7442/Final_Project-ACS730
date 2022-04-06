@@ -1,3 +1,4 @@
+# S3 Bucket for Staging env
 terraform {
   backend "s3" {
     bucket = "tf-stagings3-final-project-acs730"       // Bucket where to SAVE Terraform State
