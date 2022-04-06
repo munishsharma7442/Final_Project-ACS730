@@ -204,80 +204,19 @@ resource "aws_security_group" "bastion_sg" {
   )
 }
 
-# module "alb" {
-#   source              = "../../../modules/alb"
-#   env                 = var.env
-#   vpc_cidr              = data.terraform_remote_state.network.outputs.vpc_id
-#   aws_security_group     = aws_security_group.webserver_sg.id
-#   public_subnet_ids  =  data.terraform_remote_state.network.outputs.public_subnet_ids[*]
-#   prefix              = var.prefix
-#   default_tags        = var.default_tags
-# }
+#######################################################
+# Using AWS Application Load balancer (alb) module
+#######################################################
 
-# resource "aws_lb_target_group_attachment" "ec2_attach" {
-#   count = length (aws_instance.webserver)
-#   target_group_arn = module.alb.outputs.target_group_id
-#   target_id        = aws_instance.webserver[count.index].id
-#   port             = 80
-# }
-
-
-resource "aws_lb" "alb" {
-  name               = "alb-${var.env}"
-  internal           = false
-  ip_address_type    = "ipv4"
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.lb_sg.id]
-  subnets            = data.terraform_remote_state.network.outputs.public_subnet_ids[*]
-
-  #enable_deletion_protection = true
-
-  # access_logs {
-  #   bucket  = aws_s3_bucket.lb_logs.bucket
-  #   prefix  = "test-lb"
-  #   enabled = true
-  # }
-
-  tags = merge(local.default_tags,
-    {
-      "Name" = "${local.name_prefix}-ALB"
-    }
-  )
+module "alb" {
+  source          = "../../../modules/alb"
+  env             = var.env
+  vpc_id          = data.terraform_remote_state.network.outputs.vpc_id
+  security_groups = [aws_security_group.lb_sg.id]
+  subnets         = data.terraform_remote_state.network.outputs.public_subnet_ids[*]
+  prefix          = var.prefix
+  default_tags    = var.default_tags
 }
-
-
-resource "aws_lb_listener" "alb_listener" {
-  load_balancer_arn = aws_lb.alb.arn
-  port              = "80"
-  protocol          = "HTTP"
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.target_group.arn
-  }
-}
-
-resource "aws_lb_target_group" "target_group" {
-  health_check {
-    interval            = 10
-    path                = "/"
-    protocol            = "HTTP"
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-  }
-  name        = "tg-alb-${var.env}"
-  port        = 80
-  protocol    = "HTTP"
-  target_type = "instance"
-  vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
-}
-
-# resource "aws_lb_target_group_attachment" "ec2_attach" {
-#   count            = length(aws_instance.webserver)
-#   target_group_arn = aws_lb_target_group.target_group.arn
-#   target_id        = aws_instance.webserver[count.index].id
-#   port             = 80
-# }
 
 resource "aws_security_group" "lb_sg" {
   name        = "allow_http_lb"
@@ -318,11 +257,11 @@ resource "aws_security_group" "lb_sg" {
 
 # Create AWS Launch Configuration
 resource "aws_launch_configuration" "web" {
-  name                        = "web-${var.env}"
-  image_id                    = data.aws_ami.latest_amazon_linux.id
-  instance_type               = lookup(var.instance_type, var.env)
-  key_name                    = aws_key_pair.web_key.key_name
-  security_groups             = [aws_security_group.webserver_sg.id]
+  name            = "web-${var.env}"
+  image_id        = data.aws_ami.latest_amazon_linux.id
+  instance_type   = lookup(var.instance_type, var.env)
+  key_name        = aws_key_pair.web_key.key_name
+  security_groups = [aws_security_group.webserver_sg.id]
   user_data = templatefile("${path.module}/install_httpd.sh.tpl",
     {
       env    = upper(var.env),
@@ -336,7 +275,7 @@ resource "aws_autoscaling_group" "web_asg" {
   name                 = "web_asg-${var.env}"
   min_size             = 1
   max_size             = 4
-  desired_capacity     = 1
+  desired_capacity     = 2
   launch_configuration = aws_launch_configuration.web.name
   vpc_zone_identifier  = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
   lifecycle {
@@ -365,7 +304,7 @@ resource "aws_autoscaling_group" "web_asg" {
 # Create autoscaling attachment
 resource "aws_autoscaling_attachment" "web_asg_attachment" {
   autoscaling_group_name = aws_autoscaling_group.web_asg.id
-  lb_target_group_arn    = aws_lb_target_group.target_group.arn
+  lb_target_group_arn    = module.alb.target_group_arns[0]
 }
 
 # Create auto-scaling policy for scaling in

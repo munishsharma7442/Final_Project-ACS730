@@ -12,23 +12,24 @@ variable "prefix" {
 }
 # Variable to signal the current environment 
 variable "env" {
-  default     = "dev"
   type        = string
   description = "Deployment Environment"
 }
-
-# VPC CIDR range
-variable "vpc_cidr" {
-  type        = string
-  description = "VPC to host static web site"
-}
-# Provision public subnets in custom VPC
-variable "public_subnet_ids" {
+# Variable for list of subnets to associate with the load balancer
+variable "subnets" {
+  description = "A list of subnets"
   type        = list(string)
-  description = "Public Subnet CIDRs"
+  default     = null
 }
-# SG 
-variable "aws_security_group" {
+# Variable for The security groups to attach to the load balancer
+variable "security_groups" {
+  description = "The security groups to attach to the load balancer"
+  type        = list(string)
+  default     = []
+}
+# Variable for VPC_ID
+variable "vpc_id" {
+  description = "VPC id"
   type        = string
-  description = "SG for ALB"
+  default     = null
 }
