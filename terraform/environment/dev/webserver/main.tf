@@ -272,12 +272,12 @@ resource "aws_lb_target_group" "target_group" {
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 }
 
-resource "aws_lb_target_group_attachment" "ec2_attach" {
-  count            = length(aws_instance.webserver)
-  target_group_arn = aws_lb_target_group.target_group.arn
-  target_id        = aws_instance.webserver[count.index].id
-  port             = 80
-}
+# resource "aws_lb_target_group_attachment" "ec2_attach" {
+#   count            = length(aws_instance.webserver)
+#   target_group_arn = aws_lb_target_group.target_group.arn
+#   target_id        = aws_instance.webserver[count.index].id
+#   port             = 80
+# }
 
 resource "aws_security_group" "lb_sg" {
   name        = "allow_http_lb"
@@ -318,15 +318,18 @@ resource "aws_security_group" "lb_sg" {
 
 # Create AWS Launch Configuration
 resource "aws_launch_configuration" "web" {
-  name            = "web-${var.env}"
-  image_id        = data.aws_ami.latest_amazon_linux.id
-  instance_type   = lookup(var.instance_type, var.env)
-  user_data       = file("install_httpd.sh.tpl")
-  security_groups = [aws_security_group.lb_sg.id]
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  name                        = "web-${var.env}"
+  image_id                    = data.aws_ami.latest_amazon_linux.id
+  instance_type               = lookup(var.instance_type, var.env)
+  key_name                    = aws_key_pair.web_key.key_name
+  security_groups             = [aws_security_group.webserver_sg.id]
+  associate_public_ip_address = true
+  user_data = templatefile("${path.module}/install_httpd.sh.tpl",
+    {
+      env    = upper(var.env),
+      prefix = upper(local.prefix)
+    }
+  )
 }
 
 # Create ASG for Webserver
@@ -336,27 +339,26 @@ resource "aws_autoscaling_group" "web_asg" {
   max_size             = 4
   desired_capacity     = 1
   launch_configuration = aws_launch_configuration.web.name
-  vpc_zone_identifier  = data.terraform_remote_state.network.outputs.public_subnet_ids
-
+  vpc_zone_identifier  = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
   lifecycle {
     ignore_changes = [desired_capacity, target_group_arns]
   }
 
-#   dynamic "tag" {
-#     for_each = local.default_tags
+  #   dynamic "tag" {
+  #     for_each = local.default_tags
 
-#     content {
-#       key                 = tag.key
-#       value               = tag.value
-#       propagate_at_launch = true
-#     }
-#   }
-# }
+  #     content {
+  #       key                 = tag.key
+  #       value               = tag.value
+  #       propagate_at_launch = true
+  #     }
+  #   }
+  # }
 
-# Tag for correction
+  # Tag for correction
   tag {
     key                 = "Name"
-    value               = "WebASG"
+    value               = "${local.name_prefix}-auto-scaled-node"
     propagate_at_launch = true
   }
 }
