@@ -1,3 +1,4 @@
+# S3 bucket for terraform state - prod networking
 terraform {
   backend "s3" {
     bucket = "tf-prods3-final-project-acs730"      // Bucket where to SAVE Terraform State

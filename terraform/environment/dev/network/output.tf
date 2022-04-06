@@ -13,4 +13,3 @@ output "private_subnet_ids" {
 output "vpc_id" {
   value = module.vpc-dev.vpc_id
 }
-
