@@ -323,7 +323,6 @@ resource "aws_launch_configuration" "web" {
   instance_type               = lookup(var.instance_type, var.env)
   key_name                    = aws_key_pair.web_key.key_name
   security_groups             = [aws_security_group.webserver_sg.id]
-  associate_public_ip_address = true
   user_data = templatefile("${path.module}/install_httpd.sh.tpl",
     {
       env    = upper(var.env),
