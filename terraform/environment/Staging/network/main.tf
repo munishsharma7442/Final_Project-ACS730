@@ -6,5 +6,5 @@ module "vpc-staging" {
   private_cidr_blocks = var.private_cidr_blocks
   public_cidr_blocks  = var.public_cidr_blocks
   prefix              = var.prefix
-  #  default_tags        = var.default_tags
+  default_tags        = var.default_tags
 }
