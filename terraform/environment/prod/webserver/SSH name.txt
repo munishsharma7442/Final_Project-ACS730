@@ -1,0 +1,4 @@
+SSH file name: ACS_Project-prod
+
+Command
+ssh-keygen -t rsa -f ACS_Project-prod

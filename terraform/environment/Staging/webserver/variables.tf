@@ -2,10 +2,8 @@
 variable "instance_type" {
   default = {
     "prod"    = "t3.medium"
-    # "prod"    = "t2.micro"      // for test uncomment
-    "test"    = "t3.micro"
     "staging" = "t3.small"
-    "dev"     = "t2.micro"
+    "dev"     = "t3.micro"
   }
   description = "Type of the instance"
   type        = map(string)
@@ -31,14 +29,14 @@ variable "prefix" {
 
 # Variable to signal the current environment 
 variable "env" {
-  default     = "prod"
+  default     = "staging"
   type        = string
   description = "Deployment Environment"
 }
 
 variable "ec2_count" {
-  type = number
-  default = "3"
+  type    = number
+  default = "0"
 }
 
 variable "my_bastion_cidrs" {

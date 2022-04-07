@@ -9,6 +9,21 @@ variable "instance_type" {
   type        = map(string)
 }
 
+# Default tags
+variable "default_tags" {
+  default = {
+    "Owner" = "Group_9"
+    "App"   = "Web"
+  }
+}
+
+# Prefix to identify resources
+variable "prefix" {
+  type    = string
+  default = "ACS_Project"
+}
+
+
 # Variable to signal the current environment 
 variable "env" {
   default     = "dev"
@@ -17,20 +32,20 @@ variable "env" {
 }
 
 variable "ec2_count" {
-  type = number
-  default = "2"
+  type    = number
+  default = "0"
 }
 
 # Cloud9 Public IP
 variable "my_public_ip" {
   type        = string
   description = "Public IP of my Cloud9"
-  default     = "44.200.80.19"
+  default     = "54.84.81.228"
 }
 
 # Cloud9 Private IP
 variable "my_private_ip" {
   type        = string
   description = "Private IP of my Cloud9"
-  default     = "172.31.75.213"
+  default     = "172.31.62.180"
 }

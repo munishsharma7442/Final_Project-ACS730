@@ -1,4 +1,0 @@
-SSH file name: Final_Project-prod
-
-Command
-ssh-keygen -t rsa -f Final_Project-prod

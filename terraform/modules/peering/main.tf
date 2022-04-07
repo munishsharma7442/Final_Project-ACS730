@@ -2,8 +2,8 @@
 data "terraform_remote_state" "accepter" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "${var.vpc_accepter}-acs730-Final-Project"      // Bucket from where to GET Terraform State
-    key    = "${var.vpc_accepter}-network/terraform.tfstate" // Object name in the bucket to GET Terraform State
+    bucket = "tf-${var.vpc_accepter}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    key    = "${var.vpc_accepter}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
     region = "us-east-1"                            // Region where bucket created
   }
 }
@@ -12,12 +12,13 @@ data "terraform_remote_state" "accepter" { // This is to use Outputs from Remote
 data "terraform_remote_state" "requester" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "${var.vpc_requester}-acs730-Final-Project"      // Bucket from where to GET Terraform State
-    key    = "${var.vpc_requester}-network/terraform.tfstate" // Object name in the bucket to GET Terraform State
+    bucket = "tf-${var.vpc_requester}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    key    = "${var.vpc_requester}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
     region = "us-east-1"                            // Region where bucket created
   }
 }
 
+# Set AWS Region
 provider "aws"{
   region = "us-east-1"
 } 
@@ -52,9 +53,9 @@ data "aws_route_table" "requester" {
 
 # Route Table for Requester OR Dev
 resource "aws_route" "route2" {
-  count                     = length(var.vpc_cidr_accepter2)
+  count                     = length(var.vpc_cidr_accepter)
   route_table_id            = data.aws_route_table.requester.id
-  destination_cidr_block    = var.vpc_cidr_accepter2[count.index]
+  destination_cidr_block    = var.vpc_cidr_accepter[count.index]
   vpc_peering_connection_id = aws_vpc_peering_connection.default.id
 }
 

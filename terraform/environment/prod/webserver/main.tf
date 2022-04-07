@@ -53,11 +53,11 @@ resource "aws_instance" "my_amazon" {
   subnet_id                   = data.terraform_remote_state.network.outputs.private_subnet_ids[count.index]
   security_groups             = [aws_security_group.web_sg.id]
   associate_public_ip_address = false
-  # user_data = templatefile("${path.module}/install_httpd.sh.tpl",
-  #   {
-  #     env    = upper(var.env),
-  #     prefix = upper(var.prefix)
-  #   })
+  user_data = templatefile("${path.module}/install_httpd.sh.tpl",
+    {
+      env    = upper(var.env),
+      prefix = upper(var.prefix)
+    })
   
   root_block_device {
     encrypted = var.env == "prod" ? true : false
