@@ -255,108 +255,19 @@ resource "aws_security_group" "lb_sg" {
   )
 }
 
-# Create AWS Launch Configuration
-resource "aws_launch_configuration" "web" {
-  name            = "web-${var.env}"
-  image_id        = data.aws_ami.latest_amazon_linux.id
-  instance_type   = lookup(var.instance_type, var.env)
-  key_name        = aws_key_pair.web_key.key_name
-  security_groups = [aws_security_group.webserver_sg.id]
-  user_data = templatefile("${path.module}/install_httpd.sh.tpl",
-    {
-      env    = upper(var.env),
-      prefix = upper(local.prefix)
-    }
-  )
-}
+#######################################################
+# Using Auto-Scaling Group module
+#######################################################
 
-# Create ASG for Webserver
-resource "aws_autoscaling_group" "web_asg" {
-  name                 = "web_asg-${var.env}"
-  min_size             = 1
-  max_size             = 4
-  desired_capacity     = 2
-  launch_configuration = aws_launch_configuration.web.name
-  vpc_zone_identifier  = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
-  lifecycle {
-    ignore_changes = [desired_capacity, target_group_arns]
-  }
-
-  #   dynamic "tag" {
-  #     for_each = local.default_tags
-
-  #     content {
-  #       key                 = tag.key
-  #       value               = tag.value
-  #       propagate_at_launch = true
-  #     }
-  #   }
-  # }
-
-  # Tag for correction
-  tag {
-    key                 = "Name"
-    value               = "${local.name_prefix}-auto-scaled-node"
-    propagate_at_launch = true
-  }
-}
-
-# Create autoscaling attachment
-resource "aws_autoscaling_attachment" "web_asg_attachment" {
-  autoscaling_group_name = aws_autoscaling_group.web_asg.id
-  lb_target_group_arn    = module.alb.target_group_arns[0]
-}
-
-# Create auto-scaling policy for scaling in
-resource "aws_autoscaling_policy" "scale_in" {
-  name                   = "web_scale_in"
-  autoscaling_group_name = aws_autoscaling_group.web_asg.name
-  adjustment_type        = "ChangeInCapacity"
-  scaling_adjustment     = -1
-  cooldown               = 120
-}
-
-# Create cloud wathc alarm to scale in if cpu util load is below 5%
-resource "aws_cloudwatch_metric_alarm" "scale_in" {
-  alarm_description   = "Monitors CPU utilization for Web ASG"
-  alarm_actions       = [aws_autoscaling_policy.scale_in.arn]
-  alarm_name          = "web_scale_in"
-  comparison_operator = "LessThanOrEqualToThreshold"
-  namespace           = "AWS/EC2"
-  metric_name         = "CPUUtilization"
-  threshold           = "5"
-  evaluation_periods  = "2"
-  period              = "120"
-  statistic           = "Average"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
-  }
-}
-
-# Create auto-scaling policy for scaling out
-resource "aws_autoscaling_policy" "scale_out" {
-  name                   = "web_scale_out"
-  autoscaling_group_name = aws_autoscaling_group.web_asg.name
-  adjustment_type        = "ChangeInCapacity"
-  scaling_adjustment     = 1
-  cooldown               = 120
-}
-
-# Create cloud watch alarm to scale out if cpu util if the load is above 10%
-resource "aws_cloudwatch_metric_alarm" "scale_out" {
-  alarm_description   = "Monitors CPU utilization for Web ASG"
-  alarm_actions       = [aws_autoscaling_policy.scale_out.arn]
-  alarm_name          = "web_scale_out"
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  namespace           = "AWS/EC2"
-  metric_name         = "CPUUtilization"
-  threshold           = "10"
-  evaluation_periods  = "2"
-  period              = "120"
-  statistic           = "Average"
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web_asg.name
-  }
+module "asg" {
+  source              = "../../../modules/asg"
+  default_tags        = var.default_tags
+  env                 = var.env
+  instance_type       = var.instance_type
+  public_key          = aws_key_pair.web_key.key_name
+  prefix              = var.prefix
+  security_groups     = [aws_security_group.webserver_sg.id]
+  vpc_id              = data.terraform_remote_state.network.outputs.vpc_id
+  lb_target_group_arn = module.alb.target_group_arns[0]
+  vpc_zone_identifier = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
 }
