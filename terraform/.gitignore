@@ -2,3 +2,4 @@
 .terraform.lock.hcl
 ACS_Project-dev
 *.pub
+ACS_Project-staging
