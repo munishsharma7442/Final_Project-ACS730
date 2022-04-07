@@ -36,7 +36,7 @@ variable "env" {
 
 variable "ec2_count" {
   type    = number
-  default = "3"
+  default = "0"
 }
 
 variable "my_bastion_cidrs" {

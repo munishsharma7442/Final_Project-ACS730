@@ -27,8 +27,8 @@ data "terraform_remote_state" "network" { // This is to use Outputs from Remote 
   backend = "s3"
   config = {
     bucket = "tf-${var.env}s3-final-project-acs730-1" // Bucket from where to GET Terraform State
-    key    = "${var.env}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                            // Region where bucket created
+    key    = "${var.env}/network/terraform.tfstate"   // Object name in the bucket to GET Terraform State
+    region = "us-east-1"                              // Region where bucket created
   }
 }
 
@@ -51,7 +51,7 @@ resource "aws_instance" "webserver" {
   instance_type               = lookup(var.instance_type, var.env)
   key_name                    = aws_key_pair.web_key.key_name
   subnet_id                   = data.terraform_remote_state.network.outputs.private_subnet_ids[count.index]
-  security_groups             = [aws_security_group.web_sg.id]
+  security_groups             = [aws_security_group.webserver_sg.id]
   associate_public_ip_address = false
   user_data = templatefile("${path.module}/install_httpd.sh.tpl",
     {
@@ -81,7 +81,7 @@ resource "aws_key_pair" "web_key" {
 }
 
 # Security Group
-resource "aws_security_group" "web_sg" {
+resource "aws_security_group" "webserver_sg" {
   name        = "allow_ssh"
   description = "Allow SSH inbound traffic"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
@@ -176,9 +176,27 @@ resource "aws_security_group" "lb_sg" {
   )
 }
 
-resource "aws_lb_target_group_attachment" "ec2_attach" {
-  count            = length(aws_instance.webserver)
-  target_group_arn = module.alb.target_group_arns[0]
-  target_id        = aws_instance.webserver[count.index].id
-  port             = 80
-} 
+# resource "aws_lb_target_group_attachment" "ec2_attach" {
+#   count            = length(aws_instance.webserver)
+#   target_group_arn = module.alb.target_group_arns[0]
+#   target_id        = aws_instance.webserver[count.index].id
+#   port             = 80
+# } 
+
+
+#######################################################
+# Using Auto-Scaling Group module
+#######################################################
+
+module "asg" {
+  source              = "../../../modules/asg"
+  default_tags        = var.default_tags
+  env                 = var.env
+  instance_type       = var.instance_type
+  public_key          = aws_key_pair.web_key.key_name
+  prefix              = var.prefix
+  security_groups     = [aws_security_group.webserver_sg.id]
+  vpc_id              = data.terraform_remote_state.network.outputs.vpc_id
+  lb_target_group_arn = module.alb.target_group_arns[0]
+  vpc_zone_identifier = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
+}
