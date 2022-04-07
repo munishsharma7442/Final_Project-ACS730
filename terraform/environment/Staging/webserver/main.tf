@@ -74,26 +74,6 @@ resource "aws_instance" "webserver" {
   )
 }
 
-# Create another EBS volume
-resource "aws_ebs_volume" "web_ebs" {
-  count             = var.ec2_count
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  size              = 4
-  tags = merge(local.default_tags,
-    {
-      "Name" = "${local.name_prefix}-EBS"
-    }
-  )
-}
-
-# Attach EBS volume
-resource "aws_volume_attachment" "ebs_att" {
-  count       = var.ec2_count
-  device_name = "/dev/sdh"
-  volume_id   = aws_ebs_volume.web_ebs[count.index].id
-  instance_id = aws_instance.webserver[count.index].id
-}
-
 # Adding SSH key to Amazon EC2
 resource "aws_key_pair" "web_key" {
   key_name   = local.name_prefix
