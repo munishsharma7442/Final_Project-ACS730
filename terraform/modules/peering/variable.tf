@@ -1,13 +1,13 @@
 # VPC Accepter
 variable "vpc_accepter" {
-  default     = "prod"
+  # default     = "prod"
   type        = string
   description = "Deployment Environment"
 }
 
 # VPC Requester
 variable "vpc_requester" {
-  default     = "dev"
+  # default     = "dev"
   type        = string
   description = "Deployment Environment"
 }
@@ -22,14 +22,14 @@ variable "owner_id" {
 
 # VPC Requester CIDR range or dev
 variable "vpc_cidr_requester" {
-  default     = ["10.100.0.0/16"]
+  # default     = ["10.100.0.0/16"]
   type        = list(string)
   description = "VPC Peering to host static web site"
 }
 
 # VPC Accepter CIDR range OR prod
 variable "vpc_cidr_accepter" {
-  default     = ["10.30.0.0/16"]
+  # default     = ["10.30.0.0/16"]
   type        = list(string)
   description = "VPC Peering to host static web site"
 }
