@@ -22,3 +22,5 @@ Staging webserver
 bucket = "tf-stagings3-final-project-acs730"    
 key    = "staging/webserver/terraform.tfstate" 
 
+Peering Network
+bucket = "peering-acs730-final-project"
