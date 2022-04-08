@@ -25,7 +25,6 @@ provider "aws"{
 
 # Create Peering
 resource "aws_vpc_peering_connection" "default" {
-#   peer_owner_id = var.peer_owner_id
   peer_owner_id = var.owner_id
   peer_vpc_id   = data.terraform_remote_state.accepter.outputs.vpc_id
   vpc_id        = data.terraform_remote_state.requester.outputs.vpc_id
@@ -33,12 +32,12 @@ resource "aws_vpc_peering_connection" "default" {
   auto_accept = true
 }
 
-# Retrieve Route Table Accepter OR Prod
+# Retrieve Route Table Accepter OR (Prod or Staging)
 data "aws_route_table" "accepter" {
   subnet_id = data.terraform_remote_state.accepter.outputs.private_subnet_ids[0]
 }
 
-# Route Table for Accepter OR Prod
+# Route Table for Accepter OR (Prod or Staging)
 resource "aws_route" "route1" {
   count                     = length(var.vpc_cidr_requester)
   route_table_id            = data.aws_route_table.accepter.id
