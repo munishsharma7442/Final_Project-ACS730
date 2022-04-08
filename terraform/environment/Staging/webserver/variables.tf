@@ -2,9 +2,8 @@
 variable "instance_type" {
   default = {
     "prod"    = "t3.medium"
-    # "prod"    = "t2.micro"      // for test uncomment
     "staging" = "t3.small"
-    "dev"     = "t2.micro"
+    "dev"     = "t3.micro"
   }
   description = "Type of the instance"
   type        = map(string)
@@ -36,8 +35,8 @@ variable "env" {
 }
 
 variable "ec2_count" {
-  type = number
-  default = "3"
+  type    = number
+  default = "0"
 }
 
 variable "my_bastion_cidrs" {

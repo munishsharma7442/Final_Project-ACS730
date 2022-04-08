@@ -8,7 +8,7 @@ cat > /var/www/html/index.html <<EOL
 <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <h1> <p style="color:yellow;">Welcome to our ${prefix} in ${env}! developed by Group9 members: Rodel, Krenessa, Shahab and Munish</h1>
+    <h1> <p style="color:yellow;">Welcome to our ${prefix} in ${env}! build by Group9 members: Rodel, Krenessa, Shahab & Munish</h1>
 </head>
 <style media="screen">
   body {
