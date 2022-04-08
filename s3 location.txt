@@ -12,7 +12,7 @@ key    = "prod/network/terraform.tfstate"
 
 Prod webserver
 bucket = "tf-prods3-final-project-acs730"
-key    = "prod/webservers/terraform.tfstatee" 
+key    = "prod/webservers/terraform.tfstate" 
 
 Staging network
 bucket = "tf-stagings3-final-project-acs730"    
@@ -21,3 +21,4 @@ key    = "staging/network/terraform.tfstate"
 Staging webserver
 bucket = "tf-stagings3-final-project-acs730"    
 key    = "staging/webserver/terraform.tfstate" 
+
