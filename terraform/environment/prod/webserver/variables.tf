@@ -38,12 +38,12 @@ variable "env" {
 
 variable "ec2_count" {
   type = number
-  default = "3"
+  default = "0"
 }
 
 variable "my_bastion_cidrs" {
   type        = string
-  default     = "10.100.0.0/16"
+  default     = "10.100.2.0/24"
   description = "Public IP of my Cloud 9 station to be opened in bastion ingress"
 }
 
