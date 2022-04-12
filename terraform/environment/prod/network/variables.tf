@@ -11,7 +11,7 @@ variable "default_tags" {
 # Name prefix
 variable "prefix" {
   type        = string
-  default     = "ACS_Project"
+  default     = "Group9"
   description = "Name prefix"
 }
 
@@ -22,18 +22,33 @@ variable "vpc_cidr" {
   description = "VPC to host production machines"
 }
 
-# Provision public subnets in custom VPC
-variable "public_subnet_cidrs" {
-  default     = ["10.30.0.0/24"]
-  type        = list(string)
-  description = "Public Subnet CIDRs"
-}
+# # Provision public subnets in custom VPC
+# variable "public_subnet_cidrs" {
+#   default     = ["10.30.0.0/24", "10.30.5.0/24", "10.30.6.0/24"]
+#   type        = list(string)
+#   description = "Public Subnet CIDRs"
+# }
 
-# Provision private subnets in custom VPC
-variable "private_subnet_cidrs" {
+# # Provision private subnets in custom VPC
+# variable "private_subnet_cidrs" {
+#   default     = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
+#   type        = list(string)
+#   description = "Private Subnet CIDRs"
+# }
+
+# Provision public subnets in Prod VPC
+variable "public_subnet_cidrs" {
   default     = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
   type        = list(string)
-  description = "Private Subnet CIDRs"
+  description = "Public Subnet CIDRs for Prod"
+}
+
+
+# Provision private subnets in Prod VPC
+variable "private_subnet_cidrs" {
+  default     = ["10.30.4.0/24", "10.30.5.0/24", "10.30.6.0/24"]
+  type        = list(string)
+  description = "Private Subnet CIDRs for Prod"
 }
 
 # Variable to signal the current environment 
