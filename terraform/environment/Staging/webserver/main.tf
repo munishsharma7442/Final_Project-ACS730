@@ -26,9 +26,9 @@ data "aws_ami" "latest_amazon_linux" {
 data "terraform_remote_state" "network" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-${var.env}s3-final-project-acs730-1" // Bucket from where to GET Terraform State
-    key    = "${var.env}/network/terraform.tfstate"   // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                              // Region where bucket created
+    bucket = "tf-${var.env}s3-final-project-acs730" // Bucket from where to GET Terraform State
+    key    = "${var.env}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
+    region = "us-east-1"                            // Region where bucket created
   }
 }
 
@@ -192,6 +192,7 @@ module "asg" {
   source              = "../../../modules/asg"
   default_tags        = var.default_tags
   env                 = var.env
+  desired_size        = var.desired_size
   instance_type       = var.instance_type
   public_key          = aws_key_pair.web_key.key_name
   prefix              = var.prefix

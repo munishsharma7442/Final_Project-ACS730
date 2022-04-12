@@ -45,3 +45,8 @@ variable "my_bastion_cidrs" {
   description = "Public IP of my Cloud 9 station to be opened in bastion ingress"
 }
 
+variable "desired_size" {
+  type        = number
+  description = "Desired size for ASG"
+  default     = 3
+}
