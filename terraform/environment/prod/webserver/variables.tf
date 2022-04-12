@@ -1,7 +1,7 @@
 # Instance type
 variable "instance_type" {
   default = {
-    "prod"    = "t3.medium"
+    "prod" = "t3.medium"
     # "prod"    = "t2.micro"      // for test uncomment
     "test"    = "t3.micro"
     "staging" = "t3.small"
@@ -37,7 +37,7 @@ variable "env" {
 }
 
 variable "ec2_count" {
-  type = number
+  type    = number
   default = "0"
 }
 

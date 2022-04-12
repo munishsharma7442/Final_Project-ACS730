@@ -26,7 +26,7 @@ data "aws_ami" "latest_amazon_linux" {
 data "terraform_remote_state" "network" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-${var.env}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    bucket = "tf-${var.env}s3-final-project-acs730" // Bucket from where to GET Terraform State
     key    = "${var.env}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
     region = "us-east-1"                            // Region where bucket created
   }
@@ -35,9 +35,9 @@ data "terraform_remote_state" "network" { // This is to use Outputs from Remote 
 data "terraform_remote_state" "bastion" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-devs3-final-project-acs730"      // Bucket from where to GET Terraform State
+    bucket = "tf-devs3-final-project-acs730"   // Bucket from where to GET Terraform State
     key    = "dev/webserver/terraform.tfstate" // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                            // Region where bucket created
+    region = "us-east-1"                       // Region where bucket created
   }
 }
 
@@ -65,8 +65,8 @@ resource "aws_instance" "my_amazon" {
     {
       env    = upper(var.env),
       prefix = upper(var.prefix)
-    })
-  
+  })
+
   root_block_device {
     encrypted = var.env == "prod" ? true : false
   }
@@ -77,7 +77,7 @@ resource "aws_instance" "my_amazon" {
 
   tags = merge(local.default_tags,
     {
-      "Name" = "${local.name_prefix}-Amazon-Linux-${count.index+1}"
+      "Name" = "${local.name_prefix}-Amazon-Linux-${count.index + 1}"
     }
   )
 }
@@ -115,30 +115,30 @@ resource "aws_security_group" "webserver_sg" {
   description = "Allow SSH inbound traffic"
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
-    ingress {
-    description      = "SSH from bastion"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
+  ingress {
+    description = "SSH from bastion"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     #security_groups  = data.terraform_remote_state.webserver.bastion_sg.id
     #security_groups  = [aws_security_group.bastion_sg.id]
     #aws_security_group.bastion_sg
-    cidr_blocks      = [var.my_bastion_cidrs]
+    cidr_blocks = [var.my_bastion_cidrs]
     # cidr_blocks    = ["0.0.0.0/0"]
     #ipv6_cidr_blocks = ["::/0"]
   }
 
-    ingress {
-    description      = "HTTP from bastion"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = [var.my_bastion_cidrs]
+  ingress {
+    description = "HTTP from bastion"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.my_bastion_cidrs]
     # cidr_blocks    = ["0.0.0.0/0"]
     #ipv6_cidr_blocks = ["::/0"]
   }
 
-    egress {
+  egress {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
@@ -158,9 +158,9 @@ resource "aws_security_group" "webserver_sg" {
 #######################################################
 
 module "alb" {
-  source          = "../../../modules/alb"
-  env             = var.env
-  vpc_id          = data.terraform_remote_state.network.outputs.vpc_id
+  source = "../../../modules/alb"
+  env    = var.env
+  vpc_id = data.terraform_remote_state.network.outputs.vpc_id
   #security_groups = data.terraform_remote_state.webserver.bastion_sg.id
   security_groups = [aws_security_group.lb_sg.id]
   subnets         = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
@@ -175,27 +175,27 @@ resource "aws_security_group" "lb_sg" {
   vpc_id      = data.terraform_remote_state.network.outputs.vpc_id
 
   ingress {
-    description      = "HTTP from everywhere"
-    from_port        = 80
-    to_port          = 80
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "HTTP from everywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
     #ipv6_cidr_blocks = ["::/0"]
   }
   ingress {
-    description      = "HTTP from everywhere"
-    from_port        = 8080
-    to_port          = 8080
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "HTTP from everywhere"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
     #ipv6_cidr_blocks = ["::/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
     #ipv6_cidr_blocks = ["::/0"]
   }
 
