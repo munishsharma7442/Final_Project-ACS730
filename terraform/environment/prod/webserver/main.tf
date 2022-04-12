@@ -32,14 +32,14 @@ data "terraform_remote_state" "network" { // This is to use Outputs from Remote 
   }
 }
 
-data "terraform_remote_state" "bastion" { // This is to use Outputs from Remote State
-  backend = "s3"
-  config = {
-    bucket = "tf-devs3-final-project-acs730"   // Bucket from where to GET Terraform State
-    key    = "dev/webserver/terraform.tfstate" // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                       // Region where bucket created
-  }
-}
+# data "terraform_remote_state" "bastion" { // This is to use Outputs from Remote State
+#   backend = "s3"
+#   config = {
+#     bucket = "tf-devs3-final-project-acs730"   // Bucket from where to GET Terraform State
+#     key    = "dev/webserver/terraform.tfstate" // Object name in the bucket to GET Terraform State
+#     region = "us-east-1"                       // Region where bucket created
+#   }
+# }
 
 # Data source for availability zones in us-east-1
 data "aws_availability_zones" "available" {
@@ -138,6 +138,14 @@ resource "aws_security_group" "webserver_sg" {
     #ipv6_cidr_blocks = ["::/0"]
   }
 
+  ingress {
+    description     = "HTTP from LB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.lb_sg.id]
+  }
+
   egress {
     from_port        = 0
     to_port          = 0
@@ -154,21 +162,19 @@ resource "aws_security_group" "webserver_sg" {
 }
 
 #######################################################
-#  Using AWS Application Load balancer (alb) module   #
+# Using AWS Application Load balancer (alb) module
 #######################################################
 
 module "alb" {
-  source = "../../../modules/alb"
-  env    = var.env
-  vpc_id = data.terraform_remote_state.network.outputs.vpc_id
-  #security_groups = data.terraform_remote_state.webserver.bastion_sg.id
+  source          = "../../../modules/alb"
+  env             = var.env
+  vpc_id          = data.terraform_remote_state.network.outputs.vpc_id
   security_groups = [aws_security_group.lb_sg.id]
-  subnets         = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
+  subnets         = data.terraform_remote_state.network.outputs.public_subnet_ids[*]
   prefix          = var.prefix
   default_tags    = var.default_tags
 }
 
-# Create "Security Group" For Load Balancer
 resource "aws_security_group" "lb_sg" {
   name        = "allow_http_lb"
   description = "Allow HTTP inbound traffic"
@@ -207,13 +213,14 @@ resource "aws_security_group" "lb_sg" {
 }
 
 #######################################################
-#           Using Auto-Scaling Group module           #
+# Using Auto-Scaling Group module
 #######################################################
 
 module "asg" {
   source              = "../../../modules/asg"
   default_tags        = var.default_tags
   env                 = var.env
+  desired_size        = var.desired_size
   instance_type       = var.instance_type
   public_key          = aws_key_pair.web_key.key_name
   prefix              = var.prefix
@@ -222,4 +229,3 @@ module "asg" {
   lb_target_group_arn = module.alb.target_group_arns[0]
   vpc_zone_identifier = data.terraform_remote_state.network.outputs.private_subnet_ids[*]
 }
-
