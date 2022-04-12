@@ -263,6 +263,7 @@ module "asg" {
   source              = "../../../modules/asg"
   default_tags        = var.default_tags
   env                 = var.env
+  desired_size        = var.desired_size
   instance_type       = var.instance_type
   public_key          = aws_key_pair.web_key.key_name
   prefix              = var.prefix
