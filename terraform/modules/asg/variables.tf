@@ -57,3 +57,10 @@ variable "public_key" {
   type        = string
   default     = null
 }
+
+variable "desired_size" {
+  type        = number
+  description = "Desired size for ASG"
+  # default     = 2
+}
+

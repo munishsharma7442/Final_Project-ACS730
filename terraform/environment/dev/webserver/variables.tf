@@ -20,7 +20,7 @@ variable "default_tags" {
 # Prefix to identify resources
 variable "prefix" {
   type    = string
-  default = "ACS_Project"
+  default = "Group9"
 }
 
 
@@ -48,4 +48,10 @@ variable "my_private_ip" {
   type        = string
   description = "Private IP of my Cloud9"
   default     = "172.31.57.39"
+}
+
+variable "desired_size" {
+  type        = number
+  description = "Desired size for ASG"
+  default     = 2
 }

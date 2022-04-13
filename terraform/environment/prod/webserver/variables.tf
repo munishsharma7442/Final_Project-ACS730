@@ -1,7 +1,7 @@
 # Instance type
 variable "instance_type" {
   default = {
-    "prod"    = "t3.medium"
+    "prod" = "t3.medium"
     # "prod"    = "t2.micro"      // for test uncomment
     "test"    = "t3.micro"
     "staging" = "t3.small"
@@ -37,13 +37,18 @@ variable "env" {
 }
 
 variable "ec2_count" {
-  type = number
-  default = "3"
+  type    = number
+  default = "0"
 }
 
 variable "my_bastion_cidrs" {
   type        = string
-  default     = "10.100.0.0/16"
+  default     = "10.100.2.0/24"
   description = "Public IP of my Cloud 9 station to be opened in bastion ingress"
 }
 
+variable "desired_size" {
+  type        = number
+  description = "Desired size for ASG"
+  default     = 3
+}

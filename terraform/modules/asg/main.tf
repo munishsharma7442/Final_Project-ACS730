@@ -48,7 +48,7 @@ resource "aws_autoscaling_group" "web_asg" {
   name                 = "web_asg-${var.env}"
   min_size             = 1
   max_size             = 4
-  desired_capacity     = 2
+  desired_capacity     = var.desired_size
   launch_configuration = aws_launch_configuration.web.name
   vpc_zone_identifier  = var.vpc_zone_identifier[*]
   lifecycle {

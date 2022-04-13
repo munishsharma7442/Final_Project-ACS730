@@ -9,7 +9,7 @@ variable "default_tags" {
 # Prefix to identify resources
 variable "prefix" {
   type    = string
-  default = "ACS_Project"
+  default = "Group9"
 }
 
 # VPC CIDR range
