@@ -1,5 +1,5 @@
 # Retrieve global variables from the Terraform module
-module "globalvars"{
+module "globalvars" {
   source = "../../../modules/globalvars"
 }
 
@@ -13,7 +13,7 @@ locals {
 
 # Module to deploy basic networking 
 module "vpc-prod" {
-  source = "../../../modules/aws_network"
+  source              = "../../../modules/aws_network"
   env                 = var.env
   vpc_cidr            = var.vpc_cidr
   public_cidr_blocks  = var.public_subnet_cidrs

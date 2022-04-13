@@ -74,7 +74,7 @@ resource "aws_autoscaling_policy" "scale_in" {
   autoscaling_group_name = aws_autoscaling_group.web_asg.name
   adjustment_type        = "ChangeInCapacity"
   scaling_adjustment     = -1
-  cooldown               = 60
+  cooldown               = 900
 }
 
 # Create cloud watch alarm to scale in if cpu util load is below 5%
@@ -87,7 +87,7 @@ resource "aws_cloudwatch_metric_alarm" "scale_in" {
   metric_name         = "CPUUtilization"
   threshold           = "5"
   evaluation_periods  = "2"
-  period              = "60"
+  period              = "600"
   statistic           = "Average"
 
   dimensions = {

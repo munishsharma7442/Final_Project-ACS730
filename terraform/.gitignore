@@ -1,6 +1,6 @@
 .terraform
 .terraform.lock.hcl
-ACS_Project-dev
 *.pub
-ACS_Project-staging
-ACS_Project-prod
+Group9-staging
+Group9-prod
+Group9-dev
