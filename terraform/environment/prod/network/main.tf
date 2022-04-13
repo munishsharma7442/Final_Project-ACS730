@@ -6,7 +6,7 @@ module "globalvars"{
 # Define tags locally
 locals {
   default_tags = merge(module.globalvars.default_tags, { "env" = var.env })
-  prefix = module.globalvars.prefix
+  prefix       = module.globalvars.prefix
   name_prefix  = "${local.prefix}-${var.env}"
 }
 
