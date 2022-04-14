@@ -23,16 +23,6 @@ data "terraform_remote_state" "network" { // This is to use Outputs from Remote 
   }
 }
 
-# # Use remote state to retrieve vpcpeering data
-# data "terraform_remote_state" "vpcpeering" { // This is to use Outputs from Remote State
-#   backend = "s3"
-#   config = {
-#     bucket = "peering-acs730-final-project"           // Bucket where to SAVE Terraform State
-#     key    = "peering-network/terraform.tfstate" // Object name in the bucket to SAVE Terraform State
-#     region = "us-east-1"                         // Region where bucket is created
-#   }
-# }
-
 # Data source for availability zones in us-east-1
 data "aws_availability_zones" "available" {
   state = "available"

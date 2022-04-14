@@ -2,9 +2,9 @@
 data "terraform_remote_state" "accepter" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-${var.vpc_accepter}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    bucket = "tf-${var.vpc_accepter}s3-final-project-acs730" // Bucket from where to GET Terraform State
     key    = "${var.vpc_accepter}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                            // Region where bucket created
+    region = "us-east-1"                                     // Region where bucket created
   }
 }
 
@@ -12,24 +12,23 @@ data "terraform_remote_state" "accepter" { // This is to use Outputs from Remote
 data "terraform_remote_state" "requester" { // This is to use Outputs from Remote State
   backend = "s3"
   config = {
-    bucket = "tf-${var.vpc_requester}s3-final-project-acs730"      // Bucket from where to GET Terraform State
+    bucket = "tf-${var.vpc_requester}s3-final-project-acs730" // Bucket from where to GET Terraform State
     key    = "${var.vpc_requester}/network/terraform.tfstate" // Object name in the bucket to GET Terraform State
-    region = "us-east-1"                            // Region where bucket created
+    region = "us-east-1"                                      // Region where bucket created
   }
 }
 
 # Set AWS Region
-provider "aws"{
+provider "aws" {
   region = "us-east-1"
-} 
+}
 
 # Create Peering
 resource "aws_vpc_peering_connection" "default" {
   peer_owner_id = var.owner_id
   peer_vpc_id   = data.terraform_remote_state.accepter.outputs.vpc_id
   vpc_id        = data.terraform_remote_state.requester.outputs.vpc_id
-  # peer_region = "us-east-1" 
-  auto_accept = true
+  auto_accept   = true
 }
 
 # Retrieve Route Table Accepter OR (Prod or Staging)

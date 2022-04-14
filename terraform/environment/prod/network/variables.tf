@@ -22,20 +22,6 @@ variable "vpc_cidr" {
   description = "VPC to host production machines"
 }
 
-# # Provision public subnets in custom VPC
-# variable "public_subnet_cidrs" {
-#   default     = ["10.30.0.0/24", "10.30.5.0/24", "10.30.6.0/24"]
-#   type        = list(string)
-#   description = "Public Subnet CIDRs"
-# }
-
-# # Provision private subnets in custom VPC
-# variable "private_subnet_cidrs" {
-#   default     = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
-#   type        = list(string)
-#   description = "Private Subnet CIDRs"
-# }
-
 # Provision public subnets in Prod VPC
 variable "public_subnet_cidrs" {
   default     = ["10.30.1.0/24", "10.30.2.0/24", "10.30.3.0/24"]
@@ -57,4 +43,3 @@ variable "env" {
   type        = string
   description = "Deployment Environment"
 }
-

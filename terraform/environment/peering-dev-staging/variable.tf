@@ -22,14 +22,14 @@ variable "owner_id" {
 
 # VPC Requester CIDR range
 variable "vpc_cidr_requester" {
-  default     = ["10.100.0.0/16"]   // DEV env
+  default     = ["10.100.0.0/16"] // DEV env
   type        = list(string)
   description = "VPC Peering to dev"
 }
 
 # VPC Accepter CIDR range
 variable "vpc_cidr_accepter" {
-  default     = ["10.200.0.0/16"]   // STAGING env
+  default     = ["10.200.0.0/16"] // STAGING env
   type        = list(string)
   description = "VPC Peering to staging"
 }

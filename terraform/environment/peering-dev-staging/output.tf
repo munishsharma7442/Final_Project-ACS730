@@ -1,7 +1,7 @@
 # VPC peering Connection ID
 output "connection_id" {
-  value        = module.peering-dev-staging.connection_id
-   description = "VPC peering connection ID"
+  value       = module.peering-dev-staging.connection_id
+  description = "VPC peering connection ID"
 }
 
 # Accept status for VPC peering

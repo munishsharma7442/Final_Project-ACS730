@@ -1,6 +1,6 @@
 # Default tags
 variable "default_tags" {
-  default = {}
+  default     = {}
   type        = map(any)
   description = "Default tags to be appliad to all AWS resources"
 }
@@ -61,6 +61,5 @@ variable "public_key" {
 variable "desired_size" {
   type        = number
   description = "Desired size for ASG"
-  # default     = 2
 }
 

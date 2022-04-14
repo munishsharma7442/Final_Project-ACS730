@@ -1,6 +1,6 @@
 # Default tags
 variable "default_tags" {
-  default = {}
+  default     = {}
   type        = map(any)
   description = "Default tags to be appliad to all AWS resources"
 }
