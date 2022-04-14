@@ -32,15 +32,6 @@ data "terraform_remote_state" "network" { // This is to use Outputs from Remote 
   }
 }
 
-# data "terraform_remote_state" "bastion" { // This is to use Outputs from Remote State
-#   backend = "s3"
-#   config = {
-#     bucket = "tf-devs3-final-project-acs730"   // Bucket from where to GET Terraform State
-#     key    = "dev/webserver/terraform.tfstate" // Object name in the bucket to GET Terraform State
-#     region = "us-east-1"                       // Region where bucket created
-#   }
-# }
-
 # Data source for availability zones in us-east-1
 data "aws_availability_zones" "available" {
   state = "available"
@@ -87,7 +78,6 @@ resource "aws_ebs_volume" "web_ebs" {
   count             = var.ec2_count
   availability_zone = data.aws_availability_zones.available.names[count.index]
   size              = 4
-  # size              = 40
   tags = merge(local.default_tags,
     {
       "Name" = "${local.name_prefix}-EBS"
@@ -120,12 +110,7 @@ resource "aws_security_group" "webserver_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    #security_groups  = data.terraform_remote_state.webserver.bastion_sg.id
-    #security_groups  = [aws_security_group.bastion_sg.id]
-    #aws_security_group.bastion_sg
     cidr_blocks = [var.my_bastion_cidrs]
-    # cidr_blocks    = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
@@ -134,8 +119,6 @@ resource "aws_security_group" "webserver_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = [var.my_bastion_cidrs]
-    # cidr_blocks    = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
@@ -186,7 +169,6 @@ resource "aws_security_group" "lb_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = ["::/0"]
   }
   ingress {
     description = "HTTP from everywhere"
@@ -194,7 +176,6 @@ resource "aws_security_group" "lb_sg" {
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = ["::/0"]
   }
 
   egress {
@@ -202,7 +183,6 @@ resource "aws_security_group" "lb_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    #ipv6_cidr_blocks = ["::/0"]
   }
 
   tags = merge(local.default_tags,

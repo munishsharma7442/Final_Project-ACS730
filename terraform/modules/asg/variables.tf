@@ -61,6 +61,5 @@ variable "public_key" {
 variable "desired_size" {
   type        = number
   description = "Desired size for ASG"
-  # default     = 2
 }
 

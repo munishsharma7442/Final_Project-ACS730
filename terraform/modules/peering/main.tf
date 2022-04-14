@@ -28,8 +28,7 @@ resource "aws_vpc_peering_connection" "default" {
   peer_owner_id = var.owner_id
   peer_vpc_id   = data.terraform_remote_state.accepter.outputs.vpc_id
   vpc_id        = data.terraform_remote_state.requester.outputs.vpc_id
-  # peer_region = "us-east-1" 
-  auto_accept = true
+  auto_accept   = true
 }
 
 # Retrieve Route Table Accepter OR (Prod or Staging)
