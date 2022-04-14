@@ -24,7 +24,7 @@ locals {
     var.default_tags,
     { "Env" = var.env }
   )
-  prefix       = var.prefix
+  prefix      = var.prefix
   name_prefix = "${var.prefix}-${var.env}"
 }
 
@@ -64,7 +64,7 @@ resource "aws_autoscaling_group" "web_asg" {
 
 # Create autoscaling attachment
 resource "aws_autoscaling_attachment" "web_asg_attachment" {
-  autoscaling_group_name  = aws_autoscaling_group.web_asg.id
+  autoscaling_group_name = aws_autoscaling_group.web_asg.id
   lb_target_group_arn    = var.lb_target_group_arn
 }
 

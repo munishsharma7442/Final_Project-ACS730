@@ -8,5 +8,5 @@ output "default_tags" {
 
 # Prefix to identify resources
 output "prefix" {
-  value     = "Group9"
+  value = "Group9"
 }

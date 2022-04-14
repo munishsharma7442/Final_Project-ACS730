@@ -100,7 +100,7 @@ resource "aws_nat_gateway" "nat-gw" {
 
 # Create elastic IP for NAT GW
 resource "aws_eip" "nat-eip" {
-  vpc   = true
+  vpc = true
   tags = {
     Name = "${local.name_prefix}-NAT-GW"
   }

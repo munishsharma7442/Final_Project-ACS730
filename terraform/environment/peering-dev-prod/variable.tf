@@ -22,14 +22,14 @@ variable "owner_id" {
 
 # VPC Requester CIDR range
 variable "vpc_cidr_requester" {
-  default     = ["10.100.0.0/16"]     // DEV env
+  default     = ["10.100.0.0/16"] // DEV env
   type        = list(string)
   description = "VPC Peering to host static web site"
 }
 
 # VPC Accepter CIDR range
 variable "vpc_cidr_accepter" {
-  default     = ["10.30.0.0/16"]      // Prod env
+  default     = ["10.30.0.0/16"] // Prod env
   type        = list(string)
   description = "VPC Peering to host static web site"
 }
