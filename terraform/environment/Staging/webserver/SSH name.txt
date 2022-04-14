@@ -1,4 +1,4 @@
-SSH file name: ACS_Project-staging
+SSH file name: Group9-staging
 
 Command
-ssh-keygen -t rsa -f ACS_Project-staging
+ssh-keygen -t rsa -f Group9-staging
