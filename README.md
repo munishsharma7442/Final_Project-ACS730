@@ -1,3 +1,5 @@
+[![tfsec](https://github.com/munishsharma7442/Final_Project-ACS730/actions/workflows/tfsec.yml/badge.svg)](https://github.com/munishsharma7442/Final_Project-ACS730/actions/workflows/tfsec.yml)
+
 # Final_Project-ACS730 developed by Group 9
 Pre-requisites-
 1) Create a S3 public bucket for websites to load images from S3:
